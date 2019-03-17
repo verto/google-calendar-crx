@@ -221,7 +221,10 @@ chrome.alarms.onAlarm.addListener(function(alarm) {
     iconUrl: 'icons/logo_calendar_96.png',
     title: feeds.events[eventIndex].title,
     message: chrome.i18n.getMessage(
-        'your_event_starts_in', [feeds.events[eventIndex].title, triggeredAlarm.reminder])
+      'your_event_starts_in', [feeds.events[eventIndex].title, triggeredAlarm.reminder]),
+    buttons: [{
+      title: "Open Location"
+    }]
   });
 });
 
@@ -236,6 +239,28 @@ chrome.notifications.onClicked.addListener(function(alarmName) {
   });
   chrome.tabs.create({'url': feeds.events[eventIndex].gcal_url});
 });
+
+/*
+ * Go to event location link
+ */
+chrome.notifications.onButtonClicked.addListener(function(notificationId, buttonIndex) {
+  if (buttonIndex === 0) {
+    var clickedEvent = JSON.parse(notificationId);
+    var event = feeds.events.find(function(event) {
+      return event.event_id === clickedEvent.event_id;
+    });
+
+    var url = event.gcal_url;
+    if (event.location) {
+      url = event.location.match(/^https?:\/\//) ?
+        event.location :
+        'https://maps.google.com?q=' + encodeURIComponent(event.location);
+    }
+
+    chrome.tabs.create({'url': url});
+  }
+});
+
 
 
 background.initialize();
